@@ -1,0 +1,154 @@
+package aes.test;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import sun.misc.BASE64Decoder;
+
+public class AESTest {
+   
+     private static char[] codec_table = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 
+         'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 
+         'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 
+         'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 
+         'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', 
+         '7', '8', '9', '+', '/' }; 
+    
+     public static void main(String args[]) throws Exception {
+      StringBuilder data1 = new StringBuilder("x6ugnxQFtjmHgGZj851YnDrG+hiokMmQUcBg069EsOfivQqg1StE9GMxlE1K86oFmhFvgy9DSRWxl9AL9njDPkutvkTWOSTHluajcdzwBsoy1M6VuaL42SPeFZ6qd+vp+QuZBUU70Tr17B/oUE68r7NA/LHeIheyy6KyMS8Jj2+o2TfXDBkEZ9NnCU/59H4Re+nSQ7Qx21bHbRndqi046YxdEk9z8XfJfmQYx/LiwHqyL63yxkaLc6DbZ69B6qPw" );
+          System. out.println( encrypt());
+          System. out.println( desEncrypt(data1.toString()));
+        System. out.println( "After Encryption: " + encrypt().length());
+//        System.out.println(desEncrypt());
+    }
+
+    public static String encrypt() throws Exception {
+        try {
+            StringBuilder data = new StringBuilder("123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678" );
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+//            data.append("1234567812345678");
+            String key = "1234567812345678";
+            String iv = "1a2b3c4d5e6f7g8h";
+
+            System. out.println( "Before Encryption: " + data.toString().length());
+          
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            int blockSize = cipher.getBlockSize();
+
+            byte[] dataBytes = data.toString().getBytes();
+            int plaintextLength = dataBytes. length;
+            if (plaintextLength % blockSize != 0) {
+                plaintextLength = plaintextLength + (blockSize - (plaintextLength % blockSize));
+            }
+
+            byte[] plaintext = new byte[plaintextLength];
+            System. arraycopy(dataBytes, 0, plaintext, 0, dataBytes.length);
+          
+            SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES" );
+            IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+
+            cipher.init(Cipher. ENCRYPT_MODE, keyspec, ivspec);
+            byte[] encrypted = cipher.doFinal(plaintext);
+
+            return encode(encrypted);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String desEncrypt(String data) throws Exception {
+        try
+        {
+            String key = "1234567812345678";
+            String iv = "1a2b3c4d5e6f7g8h";
+          
+            byte[] encrypted1 = new BASE64Decoder().decodeBuffer(data);
+          
+            Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+            SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(), "AES" );
+            IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+          
+            cipher.init(Cipher. DECRYPT_MODE, keyspec, ivspec);
+
+            byte[] original = cipher.doFinal(encrypted1);
+            String originalString = new String(original);
+            return originalString;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+  
+     public static String encode( byte[] a) { 
+         int totalBits = a. length * 8; 
+         int nn = totalBits % 6; 
+         int curPos = 0; // process bits 
+         StringBuffer toReturn = new StringBuffer(); 
+         while (curPos < totalBits) { 
+             int bytePos = curPos / 8; 
+             switch (curPos % 8) { 
+             case 0: 
+                 toReturn.append( codec_table[(a[bytePos] & 0xfc) >> 2]); 
+                 break; 
+             case 2: 
+  
+                 toReturn.append( codec_table[(a[bytePos] & 0x3f)]); 
+                 break; 
+             case 4: 
+                 if (bytePos == a. length - 1) { 
+                     toReturn 
+                             .append( codec_table[((a[bytePos] & 0x0f) << 2) & 0x3f]); 
+                 } else { 
+                     int pos = (((a[bytePos] & 0x0f) << 2) | ((a[bytePos + 1] & 0xc0) >> 6)) & 0x3f; 
+                     toReturn.append( codec_table[pos]); 
+                 } 
+                 break; 
+             case 6: 
+                 if (bytePos == a. length - 1) { 
+                     toReturn 
+                             .append( codec_table[((a[bytePos] & 0x03) << 4) & 0x3f]); 
+                 } else { 
+                     int pos = (((a[bytePos] & 0x03) << 4) | ((a[bytePos + 1] & 0xf0) >> 4)) & 0x3f; 
+                     toReturn.append( codec_table[pos]); 
+                 } 
+                 break; 
+             default: 
+                 //never hanppen  
+                 break; 
+             } 
+             curPos+=6; 
+         } 
+         if(nn==2) 
+         { 
+             toReturn.append( "=="); 
+         } 
+         else if(nn==4) 
+         { 
+             toReturn.append( "="); 
+         } 
+         return toReturn.toString(); 
+  
+     }
+}
+
+beforeEncode为Encode之前的字符串
+那么Encode后的字符串长度为：
+1、如果beforeEncode.length()是3的整数倍，那么长度为
+ (beforeEncode.length()/3)*4
+2、如果beforeEncode.length()不是3的整数倍，那么长度为
+(beforeEncode.length()/3+1)*4
+
+http://mazhihui.iteye.com/blog/1046727
+ 最近在开发中用到了sun.misc.BASE64Encoder。发现两个问题： 
+     其一、当编码的字节较长时，encode出来的字符串会自动加入\n\r进行自动换行。针对这个问题，原因是rfc规范规定76个字符换一次行。 
+     其二、编码效率较低。 
